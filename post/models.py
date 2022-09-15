@@ -18,6 +18,19 @@ def like_dislike_save(sender, instance, **kwargs):
         like_dislike.delete()
 
 
+def like_dislike_save_comment(sender, instance, **kwargs):
+    if sender == LikeComment:
+        model = DisLikeComment
+    else:
+        model = LikeComment
+    try:
+        like_dislike = model.objects.get(comment=instance.comment, user=instance.user)
+    except model.DoesNotExist:
+        pass
+    else:
+        like_dislike.delete()
+
+
 class Post(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -67,6 +80,14 @@ class LikeTweet(models.Model):
     class Meta:
         unique_together = ('user', 'tweet')
 
+
+class LikeComment(models.Model):
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'comment')
+
     # def save(self, *args, **kwargs):
     #     try:
     #         dislike = DisLikeTweet.objects.get(tweet=self.tweet, user=self.user)
@@ -83,6 +104,15 @@ class DisLikeTweet(models.Model):
 
     class Meta:
         unique_together = ('user', 'tweet')
+
+
+class DisLikeComment(models.Model):
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'comment')
+
 
     # def save(self, *args, **kwargs):
     #     try:
@@ -102,6 +132,14 @@ class TweetStatus(models.Model):
         return self.status_name
 
 
+class CommentStatus(models.Model):
+    slug = models.CharField(max_length=32, unique=True)
+    status_name = models.CharField(max_length=64)
+
+    def __str__(self):
+        return self.status_name
+
+
 class LikeDislikeTweet(models.Model):
     tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -114,5 +152,20 @@ class LikeDislikeTweet(models.Model):
         return f'{self.tweet} - {self.user.username} - {self.status.status_name}'
 
 
+class LikeDislikeComment(models.Model):
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    status = models.ForeignKey(CommentStatus, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'comment')
+
+    def __str__(self):
+        return f'{self.comment} - {self.user.username} - {self.status.status_name}'
+
+
 post_save.connect(like_dislike_save, LikeTweet)
 post_save.connect(like_dislike_save, DisLikeTweet)
+
+post_save.connect(like_dislike_save_comment, LikeComment)
+post_save.connect(like_dislike_save_comment, DisLikeComment)

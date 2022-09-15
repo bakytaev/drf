@@ -10,7 +10,7 @@ from rest_framework.authentication import SessionAuthentication, TokenAuthentica
 from .permissions import IsAuthorPermission, CommentPermission
 
 
-from .models import Tweet, Comment, LikeTweet, DisLikeTweet, LikeDislikeTweet, TweetStatus
+from .models import Tweet, Comment, LikeTweet, DisLikeTweet, LikeDislikeTweet, TweetStatus, LikeDislikeComment, CommentStatus
 from .serializers import TweetSerializer, CommentSerializer
 from .paginations import StandardPagination
 
@@ -102,3 +102,20 @@ class PostTweetLike(APIView):
 #         else:
 #             data = {"message": f"tweet {tweet_id} got dislike from {request.user.username}"}
 #             return Response(data, status=status.HTTP_201_CREATED)
+
+
+class PostCommentLike(APIView):
+    def get(self, request, comment_id, status_slug):
+        comment = get_object_or_404(Comment, id=comment_id)
+        comment_status = get_object_or_404(CommentStatus, slug=status_slug)
+        try:
+            like_dislike = LikeDislikeComment.objects.create(comment=comment, user=request.user)
+        except IntegrityError:
+            like_dislike = LikeDislikeComment.objects.get(comment=comment, user=request.user)
+            like_dislike.status = comment_status
+            like_dislike.save()
+            data = {"error": f"comment {comment_id} has changed status by {request.user.username}"}
+            return Response(data, status=status.HTTP_200_OK)
+        else:
+            data = {"message": f"comment {tweet_id} got status from {request.user.username}"}
+            return Response(data, status=status.HTTP_201_CREATED)

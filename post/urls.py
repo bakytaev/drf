@@ -14,4 +14,5 @@ urlpatterns = [
     # path('tweet/<int:tweet_id>/like/', views.PostTweetLike.as_view()),
     # path('tweet/<int:tweet_id>/dislike/', views.PostTweetDisLike.as_view()),
     path('tweet/<int:tweet_id>/<str:status_slug>/', views.PostTweetLike.as_view()),
+    path('comment/<int:comment_id>/<str:status_slug>/', views.PostCommentLike.as_view()),
 ]
